@@ -39,6 +39,7 @@ class CCompiler {
           .map((f) => f.entity.path)
           .toSet();
       for (final change in changeSet.inputChanges) {
+        if (change.entity is! File) continue;
         switch (change.kind) {
           case ChangeKind.modified:
           case ChangeKind.added:
@@ -59,6 +60,7 @@ class CCompiler {
         }
       }
       for (final change in changeSet.outputChanges) {
+        if (change.entity is! File) continue;
         final source = paths.relative(
             paths.setExtension(change.entity.path, '.c'),
             from: objectsOutputDir);
@@ -74,20 +76,32 @@ class CCompiler {
       failBuild(reason: 'Nothing to do, no source files provided');
     }
 
-    // gcc is executed from the output directory, so all input files must
-    // be relativized to that, and we need to create it first
     await Directory(objectsOutputDir).create(recursive: true);
 
-    return await execProc(Process.start(
-        'gcc',
-        [
-          ...compilerArgs,
-          ...args,
-          '-MMD',
-          '-c',
-          ...sources.map((f) => paths.relative(f, from: objectsOutputDir)),
-        ],
-        workingDirectory: objectsOutputDir));
+    try {
+      return await execProc(Process.start(
+          'gcc',
+          [
+            ...compilerArgs,
+            ...args,
+            '-MMD',
+            '-c',
+            ...sources,
+          ],
+          workingDirectory: Directory.current.path));
+    } finally {
+      await _moveObjectsTo(objectsOutputDir, sources);
+    }
+  }
+}
+
+Future<void> _moveObjectsTo(
+    String objectsOutputDir, Set<String> sources) async {
+  for (final source in sources) {
+    final obj = File(paths.setExtension(paths.basename(source), '.o'));
+    final dFile = File(paths.setExtension(paths.basename(source), '.d'));
+    obj.rename(paths.join(objectsOutputDir, obj.path));
+    dFile.rename(paths.join(objectsOutputDir, dFile.path));
   }
 }
 
@@ -101,8 +115,7 @@ Future<bool> _addWithDependentsTo(Set<String> sources, String path,
     return true;
   }
   final dependents = _parseMakeFileDependents(await dFile.readAsString())
-      // FIXME files are relative to the output dir, but must be de-relativized
-      .where((f) => !deletedFiles.contains(f));
+      .where((f) => !deletedFiles.contains(f) && paths.extension(f) == '.c');
   logger.fine(() => 'Source $path has dependents: $dependents');
   sources.add(path);
   sources.addAll(dependents);

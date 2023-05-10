@@ -1,3 +1,3 @@
 char* greeting(void) {
-   return "Hi";
+   return "Hello,";
 }
