@@ -33,7 +33,7 @@ Future<void> runBuild(
 }) async {
   // configure DartleC
   final dartlec = DartleC(
-    dir(sourceDir, fileExtensions: const {'.c'}),
+    dir(sourceDir, fileExtensions: const {'.c', '.h'}),
     binaryOutputFile,
     objectsOutputDir: objectsOutputDir,
     compilerArgs: const ['-Wall'],

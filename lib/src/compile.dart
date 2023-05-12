@@ -4,6 +4,7 @@ import 'package:dartle/dartle.dart';
 import 'package:dartle/dartle_cache.dart';
 import 'package:path/path.dart' as paths;
 
+import 'dependencies.dart';
 import 'file_collection.dart';
 import 'logger.dart';
 
@@ -32,44 +33,18 @@ class CCompiler {
     logger.info(() => 'Compiling object files into $objectsOutputDir');
     var sources = originalSources;
     if (changeSet != null) {
-      sources = <String>{};
-      var missingDependenciesFile = false;
-      final deletedFiles = changeSet.inputChanges
-          .where((f) => f.kind == ChangeKind.deleted)
-          .map((f) => f.entity.path)
-          .toSet();
-      for (final change in changeSet.inputChanges) {
-        if (change.entity is! File) continue;
-        switch (change.kind) {
-          case ChangeKind.modified:
-          case ChangeKind.added:
-            missingDependenciesFile |= await _addWithDependentsTo(
-                sources, change.entity.path, deletedFiles, objectsOutputDir);
-            break;
-          case ChangeKind.deleted:
-            ignoreExceptions(() async => await File(paths.join(
-                    objectsOutputDir,
-                    paths.setExtension(
-                        paths.basename(change.entity.path), '.o')))
-                .delete());
-        }
-        if (missingDependenciesFile) {
-          // cannot continue with incremental compilation
-          sources = originalSources;
-          break;
+      final dependencyTree = await computeDependencyTree(objectsOutputDir);
+      if (dependencyTree != null) {
+        logger.fine(() => 'Dependency tree: $dependencyTree');
+        final incSources =
+            await _sourcesForIncrementalCompilation(changeSet, dependencyTree);
+        if (incSources == null) {
+          logger.info('Cannot perform incremental compilation');
+        } else {
+          sources = incSources;
+          logger.fine(() => 'Compiling incrementally: $sources');
         }
       }
-      for (final change in changeSet.outputChanges) {
-        if (change.entity is! File) continue;
-        final source = paths.relative(
-            paths.setExtension(change.entity.path, '.c'),
-            from: objectsOutputDir);
-        if (originalSources.contains(source)) {
-          await _addWithDependentsTo(
-              sources, source, deletedFiles, objectsOutputDir);
-        }
-      }
-      logger.fine(() => 'Compiling incrementally: $sources');
     }
 
     if (sources.isEmpty) {
@@ -93,6 +68,46 @@ class CCompiler {
       await _moveObjectsTo(objectsOutputDir, sources);
     }
   }
+
+  Future<Set<String>?> _sourcesForIncrementalCompilation(
+      ChangeSet changeSet, Map<String, Set<String>> dependencyTree) async {
+    var sources = <String>{};
+    final deletedFiles = changeSet.inputChanges
+        .where((f) => f.kind == ChangeKind.deleted)
+        .map((f) => f.entity.path)
+        .toSet();
+    for (final change in changeSet.inputChanges) {
+      if (change.entity is! File) continue;
+      switch (change.kind) {
+        case ChangeKind.modified || ChangeKind.added:
+          await _addWithDependentsTo(
+              sources, change.entity.path, deletedFiles, dependencyTree);
+          break;
+        case ChangeKind.deleted:
+          ignoreExceptions(() async => await File(paths.join(objectsOutputDir,
+                  paths.setExtension(paths.basename(change.entity.path), '.o')))
+              .delete());
+      }
+    }
+    for (final change in changeSet.outputChanges) {
+      if (change.entity is! File) continue;
+      final deleted = paths.basename(change.entity.path);
+      final sourceDeps = dependencyTree[deleted];
+      if (sourceDeps == null) {
+        logger.fine('Missing dependency file for $deleted');
+        // don't know the object file dependencies, cannot do incremental compilation
+        return null;
+      } else {
+        logger.fine('Deleted file $deleted has dependencies: $sourceDeps');
+        // only the direct source dependency needs to be recompiled
+        final source = sourceDeps.firstOrNull;
+        if (source != null && !deletedFiles.contains(source)) {
+          sources.add(source);
+        }
+      }
+    }
+    return sources;
+  }
 }
 
 Future<void> _moveObjectsTo(
@@ -106,26 +121,26 @@ Future<void> _moveObjectsTo(
 }
 
 /// Return true if the .d file is missing, false otherwise.
-Future<bool> _addWithDependentsTo(Set<String> sources, String path,
-    Set<String> deletedFiles, String objectsOutputDir) async {
-  final dFile = File(paths.join(
-      objectsOutputDir, paths.setExtension(paths.basename(path), '.d')));
-  if (!await dFile.exists()) {
-    logger.warning(() => 'Missing .d file: ${dFile.path}');
-    return true;
-  }
-  final dependents = _parseMakeFileDependents(await dFile.readAsString())
-      .where((f) => !deletedFiles.contains(f) && paths.extension(f) == '.c');
-  logger.fine(() => 'Source $path has dependents: $dependents');
-  sources.add(path);
+Future<void> _addWithDependentsTo(Set<String> sources, String path,
+    Set<String> deletedFiles, Map<String, Set<String>> dependencyTree) async {
+  final cpath = _withCExtension(path);
+  final dependents = _dependents(cpath, dependencyTree)
+      .where((f) => !deletedFiles.contains(f));
+  logger.fine(() => 'Source $cpath has dependents: $dependents');
+  sources.add(cpath);
   sources.addAll(dependents);
-  return false;
 }
 
-Iterable<String> _parseMakeFileDependents(String line) {
-  final startIndex = line.indexOf(':') + 2;
-  if (startIndex > 2) {
-    return line.substring(startIndex).trimRight().split(' ');
+Iterable<String> _dependents(
+    String path, Map<String, Set<String>> dependencyTree) {
+  return dependencyTree.entries
+      .where((e) => paths.extension(e.key) == '.c' && e.value.contains(path))
+      .map((e) => e.key);
+}
+
+String _withCExtension(String path) {
+  if (paths.extension(path) == '.c') {
+    return path;
   }
-  failBuild(reason: '.d file has invalid line: "$line"');
+  return paths.setExtension(path, '.c');
 }
