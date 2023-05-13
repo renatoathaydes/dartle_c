@@ -13,12 +13,16 @@ class CCompiler {
   final FileCollection sourceFiles;
   final String objectsOutputDir;
   final DartleCache cache;
+  late final String compiler;
   late final FileCollection outputs;
 
   CCompiler(this.sourceFiles, this.cache, this.objectsOutputDir,
-      [this.compilerArgs = const []]) {
+      [String? compiler, this.compilerArgs = const []]) {
+    this.compiler = compiler ?? _selectCompiler();
     outputs = CachedFileCollection(
         dir(objectsOutputDir, fileExtensions: const {'.o', '.d'}));
+
+    logger.fine(() => 'Selected C Compiler: ${this.compiler}');
   }
 
   RunCondition get runCondition =>
@@ -55,7 +59,7 @@ class CCompiler {
 
     try {
       return await execProc(Process.start(
-          'gcc',
+          compiler,
           [
             ...compilerArgs,
             ...args,
@@ -143,4 +147,15 @@ String _withCExtension(String path) {
     return path;
   }
   return paths.setExtension(path, '.c');
+}
+
+String _selectCompiler() {
+  final cc = Platform.environment['CC'];
+  if (cc != null) return cc;
+  if (Platform.isWindows) return 'cl';
+  if (Platform.isMacOS) return 'clang';
+  if (Platform.isLinux) return 'gcc';
+  throw StateError('Cannot select C compiler for this Platform. '
+      'Please set the CC environment variable or provide a `compiler` '
+      'explicitly when creating DartleC.');
 }

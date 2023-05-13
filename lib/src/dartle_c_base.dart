@@ -18,6 +18,11 @@ class DartleC {
   /// The path of the output binary executable file.
   final String binaryOutputFile;
 
+  /// The C compiler to use.
+  /// If null, the `CC` environment variable is used, and if that is not set,
+  /// an appropriate compiler is chosen for the platform.
+  final String? compiler;
+
   /// Extra compiler arguments.
   /// The `compileC` task also accepts compiler arguments.
   final List<String> compilerArgs;
@@ -35,17 +40,20 @@ class DartleC {
   late Set<Task> tasks;
 
   DartleC(this.sourceFiles, this.binaryOutputFile,
-      {this.objectsOutputDir, this.compilerArgs = const [], DartleCache? cache})
+      {this.objectsOutputDir,
+      this.compiler,
+      this.compilerArgs = const [],
+      DartleCache? cache})
       : cache = cache ?? DartleCache.instance {
     final cachedSourceFiles = CachedFileCollection(sourceFiles);
     final objDir = objectsOutputDir ?? Directory.current.path;
 
-    final compiler =
-        CCompiler(cachedSourceFiles, this.cache, objDir, compilerArgs);
+    final cc = CCompiler(
+        cachedSourceFiles, this.cache, objDir, compiler, compilerArgs);
 
-    final linker = Linker(compiler.outputs, binaryOutputFile);
+    final linker = Linker(cc.outputs, binaryOutputFile);
 
-    compileC = _createCompileTask(compiler);
+    compileC = _createCompileTask(cc);
     linkC = _createLinkTask(linker);
     tasks = {compileC, linkC};
   }
