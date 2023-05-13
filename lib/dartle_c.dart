@@ -2,3 +2,4 @@
 library dartle_c;
 
 export 'src/dartle_c_base.dart';
+export 'src/config.dart';
