@@ -13,3 +13,6 @@ pubspec.lock
 
 *.iml
 .idea/
+
+# Test reports
+/build/
