@@ -2,6 +2,10 @@ name: DartleC Build
 
 on: [push]
 
+permissions:
+  statuses: write
+  checks: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
