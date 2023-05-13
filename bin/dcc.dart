@@ -2,7 +2,7 @@ import 'dart:io' show exit, File;
 
 import 'package:dartle/dartle.dart';
 import 'package:dartle/dartle_cache.dart';
-import 'package:dartle_c/src/config.dart';
+import 'package:dartle_c/dartle_c.dart';
 import 'package:logging/logging.dart';
 
 final logger = Logger('dartle-c');
