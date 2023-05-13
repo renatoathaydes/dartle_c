@@ -152,8 +152,7 @@ String _withCExtension(String path) {
 String _selectCompiler() {
   final cc = Platform.environment['CC'];
   if (cc != null) return cc;
-  if (Platform.isWindows) return 'cl';
-  if (Platform.isMacOS) return 'clang';
+  if (Platform.isWindows || Platform.isMacOS) return 'clang';
   if (Platform.isLinux) return 'gcc';
   throw StateError('Cannot select C compiler for this Platform. '
       'Please set the CC environment variable or provide a `compiler` '
