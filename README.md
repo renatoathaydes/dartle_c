@@ -32,6 +32,9 @@ source-dirs: [src]
 output: my-binary
 ```
 
+> The `compiler` is chosen depending on the platform if not provided.
+> You can also set the `CC` environment variable to choose one.
+
 Options can also be passed to the `DartleC` tasks.
 For example, to pass an option to the C Compiler via the CLI:
 
