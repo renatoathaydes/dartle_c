@@ -65,7 +65,7 @@ class CCompiler {
             ...args,
             '-MMD',
             '-c',
-            ...sources,
+            ...sources.where((f) => paths.extension(f) == '.c'),
           ],
           workingDirectory: Directory.current.path));
     } finally {
