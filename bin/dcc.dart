@@ -25,7 +25,7 @@ Future<void> main(List<String> args) async {
 
 Future<void> runBuild(Options options, Stopwatch stopwatch) async {
   // configure DartleC
-  final configFile = File('dc.yaml');
+  final configFile = File('dcc.yaml');
   final config = (await configFile.exists())
       ? loadConfigFromYaml(configFile)
       : loadConfigFromYamlText('{}');
