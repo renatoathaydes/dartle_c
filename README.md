@@ -1,6 +1,6 @@
 # DartleC
 
-![DartleC CI](https://github.com/renatoathaydes/dartle/workflows/DartleC%20Build/badge.svg)
+[![DartleC CI](https://github.com/renatoathaydes/dartle_c/workflows/DartleC%20Build/badge.svg)](https://github.com/renatoathaydes/dartle_c/actions)
 [![pub package](https://img.shields.io/pub/v/dartle_c.svg)](https://pub.dev/packages/dartle_c)
 
 A [Dartle](https://renatoathaydes.github.io/dartle-website/) extension to compile C projects.
