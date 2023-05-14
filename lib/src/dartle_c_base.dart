@@ -51,7 +51,7 @@ class DartleC {
     final cc = CCompiler(
         cachedSourceFiles, this.cache, objDir, compiler, compilerArgs);
 
-    final linker = Linker(cc.outputs, binaryOutputFile);
+    final linker = Linker(cc.outputs, binaryOutputFile, cc.compiler);
 
     compileC = _createCompileTask(cc);
     linkC = _createLinkTask(linker);
