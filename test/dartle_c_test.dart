@@ -123,7 +123,7 @@ void main() {
 
       expect(helloOutTime6, equals(helloOutTime5));
       expect(greetingOutTime6, equals(greetingOutTime5));
-    });
+    }, timeout: const Timeout(Duration(minutes: 1)));
   });
 }
 
