@@ -31,7 +31,7 @@ void main() {
     setUp(_cleanup);
     tearDown(_cleanup);
 
-    activateLogging(Level.INFO);
+    activateLogging(Level.FINE);
 
     test('Compiles C files into object files, links into executable', () async {
       await ex.runBuild(const Options(),

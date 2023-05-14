@@ -12,7 +12,7 @@ To use it in that way, activate it with `pub`:
 dart pub global activate dartle_c
 ```
 
-After this, running `dcc` will copmile all C files found in a `src` directory to the `out` dir,
+After this, running `dcc` will compile all C files found in a `src` directory to the `out` dir,
 generating a binary executable named `a.out`.
 
 ### Configuring `dcc`
