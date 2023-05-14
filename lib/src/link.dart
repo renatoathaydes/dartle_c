@@ -20,7 +20,10 @@ class Linker {
         .resolveFiles()
         .where((f) => paths.extension(f.path) == '.o')
         .toList();
-    return await execProc(Process.start(compiler,
-        [...args, '-o', binaryOutputFile, ...objectFiles.map((f) => f.path)]));
+    return await execProc(
+      Process.start(compiler,
+          [...args, '-o', binaryOutputFile, ...objectFiles.map((f) => f.path)]),
+      successMode: StreamRedirectMode.stdoutAndStderr,
+    );
   }
 }

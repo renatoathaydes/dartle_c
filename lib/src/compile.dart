@@ -34,7 +34,8 @@ class CCompiler {
     final originalSources =
         await sourceFiles.resolveFiles().asyncMap((f) => f.path).toSet();
     logger.fine(() => 'Original source files: $originalSources');
-    logger.info(() => 'Compiling object files into $objectsOutputDir');
+    logger.info(() => 'Compiling object files into directory '
+        '"$objectsOutputDir"');
     var sources = originalSources;
     if (changeSet != null) {
       final dependencyTree = await computeDependencyTree(objectsOutputDir);
@@ -58,16 +59,19 @@ class CCompiler {
     await Directory(objectsOutputDir).create(recursive: true);
 
     try {
-      return await execProc(Process.start(
-          compiler,
-          [
-            ...compilerArgs,
-            ...args,
-            '-MMD',
-            '-c',
-            ...sources.where((f) => paths.extension(f) == '.c'),
-          ],
-          workingDirectory: Directory.current.path));
+      return await execProc(
+        Process.start(
+            compiler,
+            [
+              ...compilerArgs,
+              ...args,
+              '-MMD',
+              '-c',
+              ...sources.where((f) => paths.extension(f) == '.c'),
+            ],
+            workingDirectory: Directory.current.path),
+        successMode: StreamRedirectMode.stdoutAndStderr,
+      );
     } finally {
       await _moveObjectsTo(objectsOutputDir, sources);
     }
@@ -116,6 +120,7 @@ class CCompiler {
 
 Future<void> _moveObjectsTo(
     String objectsOutputDir, Set<String> sources) async {
+  logger.fine(() => 'Moving ${sources.length} file(s) to $objectsOutputDir');
   for (final source in sources) {
     final obj = File(paths.setExtension(paths.basename(source), '.o'));
     final dFile = File(paths.setExtension(paths.basename(source), '.d'));

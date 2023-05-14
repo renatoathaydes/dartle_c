@@ -6,7 +6,7 @@ A [Dartle](https://renatoathaydes.github.io/dartle-website/) extension to compil
 
 DartleC can be used as a command-line utility to compile C code.
 
-To use it in that way, activate it with `pub`:
+To use it in that way, [activate](https://dart.dev/tools/pub/cmd/pub-global) it with `pub`:
 
 ```shell
 dart pub global activate dartle_c
@@ -22,7 +22,7 @@ below (all options are optional):
 
 ```yaml
 compiler: gcc
-compiler-args: [-Wall]
+compiler-args: ["-std=c2x", "-Wall", "-Werror", "-ansi", "-pedantic"]
 objects-dir: out
 source-dirs: [src]
 
@@ -47,4 +47,4 @@ $ dcc compile :-std=c99
 ## Using `DartleC` as a library.
 
 To include `DartleC` in your existing Dartle build, or to write your own build system based on
-`DartleC`, check this [project example](example/dartle_c_example.dart).
+`DartleC`, check this [project's example](example/dartle_c_example.dart).

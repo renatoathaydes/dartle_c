@@ -109,7 +109,7 @@ Sources _sources(dynamic doc, String sourceFilesField, String sourceDirsField) {
       return SourceDirectories(list);
     case (null, null):
       return const SourceDirectories(['src']);
-    case (Object _, Object _):
+    case (Object, Object):
       throw DartleException(
           message: 'Only one of "$sourceFilesField" and '
               '"$sourceDirsField" must be provided');
