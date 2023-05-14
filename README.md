@@ -27,6 +27,7 @@ generating a binary executable named `a.out`.
 
 * `compileC` - Compiles C source code into object files.
 * `linkC` - Links object files, creating a binary executable.
+* `cleanC` - Deletes the outputs of all other tasks.
 
 `linkC` depends on `compileC` and is the default task. Hence, simply running `dcc`
 will run both tasks as necessary.
@@ -40,6 +41,10 @@ dcc compileC :-cstd=c99
 
 > The `:` before the argument to the `compileC` task is necessary because otherwise
 > Dartle uses the argument instead of passing it on to the task.
+
+Notice that Dartle allows calling tasks by typing only their partial names, so for example,
+the `compileC` task can be run by typing `dcc comp` or `dcc coC`. To run `linkC`, if no
+extra tasks are added, requires only `dcc l` (as no other tasks start with an `l`).
 
 Useful options:
 

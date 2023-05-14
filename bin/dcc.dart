@@ -64,7 +64,10 @@ Future<void> runBuild(Options options, Stopwatch stopwatch) async {
   final dartlec = config.toDartleC();
 
   // add a clean task to the build
-  final clean = createCleanTask(tasks: dartlec.tasks);
+  final clean = createCleanTask(
+      name: 'cleanC',
+      tasks: dartlec.tasks,
+      description: 'Deletes the outputs of all other tasks.');
 
   // run Dartle build!
   await runBasic({...dartlec.tasks, clean}, {dartlec.linkC}, options,
