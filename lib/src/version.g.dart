@@ -1,1 +1,1 @@
-const dartlecVersion = '0.1.0';
+const dartlecVersion = '0.2.0';

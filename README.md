@@ -23,14 +23,46 @@ dart pub global activate dartle_c
 After this, running `dcc` will compile all C files found in a `src` directory to the `out` dir,
 generating a binary executable named `a.out`.
 
+### Tasks
+
+* `compileC` - Compiles C source code into object files.
+* `linkC` - Links object files, creating a binary executable.
+
+`linkC` depends on `compileC` and is the default task. Hence, simply running `dcc`
+will run both tasks as necessary.
+
+To only compile the C source files without generating an executable,
+and using a specific `cstd` version:
+
+```shell
+dcc compileC :-cstd=c99
+```
+
+> The `:` before the argument to the `compileC` task is necessary because otherwise
+> Dartle uses the argument instead of passing it on to the task.
+
+Useful options:
+
+```shell
+# show usage and available options
+dcc -h
+
+# show all tasks
+dcc -s
+
+# enable verbose (`debug`) output
+dcc -l debug
+```
+
 ### Configuring `dcc`
 
 To configure `dcc`, create a `dcc.yaml` file at the project root directory with contents as shown
-below (all options are optional):
+below (all properties are optional):
 
 ```yaml
 compiler: gcc
 compiler-args: ["-std=c2x", "-Wall", "-Werror", "-ansi", "-pedantic"]
+linker-args: ["-shared"]
 objects-dir: out
 source-dirs: [src]
 
@@ -43,14 +75,7 @@ output: my-binary
 > The `compiler` is chosen depending on the platform if not provided.
 > You can also set the `CC` environment variable to choose one.
 
-Options can also be passed to the `DartleC` tasks.
-For example, to pass an option to the C Compiler via the CLI:
-
-```shell
-$ dcc compile :-Wextra
-```
-
-> CLI options are added to the `compiler-args` provided in the YAML configuration file.
+Task options are added to the `compiler-args` provided in the YAML configuration file.
 
 ## Using `DartleC` as a library.
 

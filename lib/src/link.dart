@@ -7,8 +7,10 @@ class Linker {
   final String binaryOutputFile;
   final FileCollection inputs;
   final String compiler;
+  final List<String> linkerArgs;
 
-  const Linker(this.inputs, this.binaryOutputFile, this.compiler);
+  const Linker(
+      this.inputs, this.binaryOutputFile, this.compiler, this.linkerArgs);
 
   RunCondition get runCondition =>
       RunOnChanges(outputs: file(binaryOutputFile));
@@ -21,8 +23,13 @@ class Linker {
         .where((f) => paths.extension(f.path) == '.o')
         .toList();
     return await execProc(
-      Process.start(compiler,
-          [...args, '-o', binaryOutputFile, ...objectFiles.map((f) => f.path)]),
+      Process.start(compiler, [
+        ...args,
+        ...linkerArgs,
+        '-o',
+        binaryOutputFile,
+        ...objectFiles.map((f) => f.path),
+      ]),
       successMode: StreamRedirectMode.stdoutAndStderr,
     );
   }

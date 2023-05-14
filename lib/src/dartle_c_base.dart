@@ -27,6 +27,10 @@ class DartleC {
   /// The `compileC` task also accepts compiler arguments.
   final List<String> compilerArgs;
 
+  /// Extra linker arguments.
+  /// The `linkC` task also accepts linker arguments.
+  final List<String> linkerArgs;
+
   /// The Dartle cache being used.
   final DartleCache cache;
 
@@ -43,6 +47,7 @@ class DartleC {
       {this.objectsOutputDir,
       this.compiler,
       this.compilerArgs = const [],
+      this.linkerArgs = const [],
       DartleCache? cache})
       : cache = cache ?? DartleCache.instance {
     final cachedSourceFiles = CachedFileCollection(sourceFiles);
@@ -51,7 +56,7 @@ class DartleC {
     final cc = CCompiler(
         cachedSourceFiles, this.cache, objDir, compiler, compilerArgs);
 
-    final linker = Linker(cc.outputs, binaryOutputFile, cc.compiler);
+    final linker = Linker(cc.outputs, binaryOutputFile, cc.compiler, linkerArgs);
 
     compileC = _createCompileTask(cc);
     linkC = _createLinkTask(linker);

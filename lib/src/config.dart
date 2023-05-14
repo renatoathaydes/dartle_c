@@ -30,6 +30,7 @@ final class SourceDirectories implements Sources {
 typedef DartleCConfig = ({
   String? compiler,
   List<String> compilerArgs,
+  List<String> linkerArgs,
   String objectsOutputDir,
   Sources sources,
   String binaryOutputFile,
@@ -61,6 +62,7 @@ DartleCConfig _loadConfig(dynamic doc) {
   return (
     compiler: _stringOrError(doc, 'compiler'),
     compilerArgs: _stringsOrError(doc, 'compiler-args'),
+    linkerArgs: _stringsOrError(doc, 'linker-args'),
     objectsOutputDir: _stringOrError(doc, 'objects-dir', defaultValue: 'out')!,
     sources: _sources(doc, 'source-files', 'source-dirs'),
     binaryOutputFile: _stringOrError(doc, 'output', defaultValue: 'a.out')!,

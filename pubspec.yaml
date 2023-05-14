@@ -1,6 +1,6 @@
 name: dartle_c
 description: A Dartle extension to compile code written in the C programming language.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/renatoathaydes/dartle_c
 
 environment:
