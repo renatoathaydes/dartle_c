@@ -1,5 +1,8 @@
 # DartleC
 
+![DartleC CI](https://github.com/renatoathaydes/dartle/workflows/Dartle%20Build/badge.svg)
+[![pub package](https://img.shields.io/pub/v/dartle_c.svg)](https://pub.dev/packages/dartle_c)
+
 A [Dartle](https://renatoathaydes.github.io/dartle-website/) extension to compile C projects.
 
 ## Using the executable `dcc`
