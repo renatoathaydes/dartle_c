@@ -7,10 +7,35 @@ import 'package:logging/logging.dart';
 
 final logger = Logger('dartle-c');
 
+String version() => '''
+DartleC version: $dartlecVersion
+Dartle version: $dartleVersion
+''';
+
+String help() => '''
+${version()}
+https://github.com/renatoathaydes/dartle_c
+
+Usage: dcc [<options>] [<tasks>]
+
+Runs a DartleC build.
+Configuration can be provided via task arguments or via the
+dcc.yaml file.
+
+Options:
+$optionsDescription
+''';
+
 Future<void> main(List<String> args) async {
   final stopwatch = Stopwatch()..start();
   final options = parseOptions(args);
   activateLogging(options.logLevel);
+
+  if (options.showHelp) {
+    print(help());
+  } else if (options.showVersion) {
+    return print(version());
+  }
   try {
     await runBuild(options, stopwatch);
   } on DartleException catch (e, st) {
