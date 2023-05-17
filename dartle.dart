@@ -1,14 +1,14 @@
 import 'package:dartle/dartle_dart.dart';
 
-import 'dartle-src/generateVersion.dart' as genVer;
+import 'dartle-src/generate_version.dart' as gen;
 
 final dartleDart = DartleDart();
 
 void main(List<String> args) {
-  dartleDart.formatCode.dependsOn(const {genVer.taskName});
+  dartleDart.formatCode.dependsOn(const {gen.taskName});
   run(args, tasks: {
     ...dartleDart.tasks,
-    genVer.generateVersionFileTask,
+    gen.generateVersionFileTask,
   }, defaultTasks: {
     dartleDart.build
   });
