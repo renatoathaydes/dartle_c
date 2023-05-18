@@ -57,7 +57,7 @@ Future<void> runBuild(Options options, Stopwatch stopwatch) async {
 
   logger.log(
       profile,
-      () => 'Parsed dc configuration in '
+      () => 'Parsed dcc configuration in '
           '${stopwatch.elapsedMilliseconds}ms');
   logger.fine(() => '$config');
 

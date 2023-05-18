@@ -124,8 +124,8 @@ Future<void> _moveObjectsTo(
   for (final source in sources) {
     final obj = File(paths.setExtension(paths.basename(source), '.o'));
     final dFile = File(paths.setExtension(paths.basename(source), '.d'));
-    obj.rename(paths.join(objectsOutputDir, obj.path));
-    dFile.rename(paths.join(objectsOutputDir, dFile.path));
+    await obj.rename(paths.join(objectsOutputDir, obj.path));
+    await dFile.rename(paths.join(objectsOutputDir, dFile.path));
   }
 }
 
