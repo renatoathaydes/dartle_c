@@ -59,7 +59,7 @@ Future<void> runBuild(Options options, Stopwatch stopwatch) async {
       profile,
       () => 'Parsed dcc configuration in '
           '${stopwatch.elapsedMilliseconds}ms');
-  logger.fine(() => '$config');
+  logger.fine(() => 'Config: $config');
 
   final dartlec = config.toDartleC();
 

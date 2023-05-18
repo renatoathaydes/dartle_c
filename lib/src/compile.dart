@@ -36,17 +36,18 @@ class CCompiler {
     logger.fine(() => 'Original source files: $originalSources');
     logger.info(() => 'Compiling object files into directory '
         '"$objectsOutputDir"');
-    var sources = originalSources;
+    Iterable<String> sources = originalSources.where((p) => p.endsWith('.c'));
     if (changeSet != null) {
       final dependencyTree = await computeDependencyTree(objectsOutputDir);
       if (dependencyTree != null) {
         logger.fine(() => 'Dependency tree: $dependencyTree');
-        final incSources =
-            await _sourcesForIncrementalCompilation(changeSet, dependencyTree);
-        if (incSources == null) {
+        final incrementalSources =
+            (await _computeFilesToCompile(changeSet, dependencyTree).toSet())
+                .where((e) => e.endsWith('.c'));
+        if (incrementalSources.isEmpty) {
           logger.info('Cannot perform incremental compilation');
         } else {
-          sources = incSources;
+          sources = incrementalSources;
           logger.fine(() => 'Compiling incrementally: $sources');
         }
       }
@@ -58,17 +59,13 @@ class CCompiler {
 
     await Directory(objectsOutputDir).create(recursive: true);
 
+    final allArgs = [...compilerArgs, ...args, '-MMD', '-c', ...sources];
+
+    logger.fine(() => 'Compiler command: $compiler ${allArgs.join(' ')}');
+
     try {
       return await execProc(
-        Process.start(
-            compiler,
-            [
-              ...compilerArgs,
-              ...args,
-              '-MMD',
-              '-c',
-              ...sources.where((f) => paths.extension(f) == '.c'),
-            ],
+        Process.start(compiler, allArgs,
             workingDirectory: Directory.current.path),
         successMode: StreamRedirectMode.stdoutAndStderr,
       );
@@ -77,81 +74,52 @@ class CCompiler {
     }
   }
 
-  Future<Set<String>?> _sourcesForIncrementalCompilation(
-      ChangeSet changeSet, Map<String, Set<String>> dependencyTree) async {
-    var sources = <String>{};
+  Stream<String> _computeFilesToCompile(
+      ChangeSet changeSet, Map<String, Set<String>> dependencyTree) async* {
+    // collect the deleted files to avoid trying to re-compile any
     final deletedFiles = changeSet.inputChanges
         .where((f) => f.kind == ChangeKind.deleted)
         .map((f) => f.entity.path)
         .toSet();
+
     for (final change in changeSet.inputChanges) {
-      if (change.entity is! File) continue;
       switch (change.kind) {
         case ChangeKind.modified || ChangeKind.added:
-          await _addWithDependentsTo(
-              sources, change.entity.path, deletedFiles, dependencyTree);
+          yield change.entity.path;
+          for (final dep in _dependents(change.entity.path, dependencyTree)) {
+            if (!deletedFiles.contains(dep)) yield dep;
+          }
           break;
         case ChangeKind.deleted:
-          ignoreExceptions(() async => await File(paths.join(objectsOutputDir,
-                  paths.setExtension(paths.basename(change.entity.path), '.o')))
-              .delete());
+          // must delete the output file from all deleted sources
+          await ignoreExceptions(() async =>
+              await File(paths.setExtension(change.entity.path, '.o'))
+                  .delete());
       }
     }
-    for (final change in changeSet.outputChanges) {
-      if (change.entity is! File) continue;
-      final deleted = paths.basename(change.entity.path);
-      final sourceDeps = dependencyTree[deleted];
-      if (sourceDeps == null) {
-        logger.fine('Missing dependency file for $deleted');
-        // don't know the object file dependencies, cannot do incremental compilation
-        return null;
-      } else {
-        logger.fine('Deleted file $deleted has dependencies: $sourceDeps');
-        // only the direct source dependency needs to be recompiled
-        final source = sourceDeps.firstOrNull;
-        if (source != null && !deletedFiles.contains(source)) {
-          sources.add(source);
-        }
-      }
-    }
-    return sources;
   }
 }
 
 Future<void> _moveObjectsTo(
-    String objectsOutputDir, Set<String> sources) async {
-  logger.fine(() => 'Moving ${sources.length} file(s) to $objectsOutputDir');
-  for (final source in sources) {
+    String objectsOutputDir, Iterable<String> sources) async {
+  final cSources = sources.where((e) => e.endsWith('.c')).toSet();
+  logger
+      .fine(() => 'Moving ${2 * cSources.length} file(s) to $objectsOutputDir');
+  for (final source in cSources) {
     final obj = File(paths.setExtension(paths.basename(source), '.o'));
     final dFile = File(paths.setExtension(paths.basename(source), '.d'));
+    logger.finer(
+        () => 'Moving ${obj.path} and ${dFile.path} to $objectsOutputDir');
     await obj.rename(paths.join(objectsOutputDir, obj.path));
     await dFile.rename(paths.join(objectsOutputDir, dFile.path));
   }
 }
 
-/// Return true if the .d file is missing, false otherwise.
-Future<void> _addWithDependentsTo(Set<String> sources, String path,
-    Set<String> deletedFiles, Map<String, Set<String>> dependencyTree) async {
-  final cpath = _withCExtension(path);
-  final dependents = _dependents(cpath, dependencyTree)
-      .where((f) => !deletedFiles.contains(f));
-  logger.fine(() => 'Source $cpath has dependents: $dependents');
-  sources.add(cpath);
-  sources.addAll(dependents);
-}
-
 Iterable<String> _dependents(
     String path, Map<String, Set<String>> dependencyTree) {
   return dependencyTree.entries
-      .where((e) => paths.extension(e.key) == '.c' && e.value.contains(path))
+      .where((e) => e.value.contains(path))
       .map((e) => e.key);
-}
-
-String _withCExtension(String path) {
-  if (paths.extension(path) == '.c') {
-    return path;
-  }
-  return paths.setExtension(path, '.c');
 }
 
 String _selectCompiler() {

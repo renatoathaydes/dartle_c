@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:path/path.dart' as paths;
-
 Future<Map<String, Set<String>>?> computeDependencyTree(
     String objectsOutputDir) async {
   final outDir = Directory(objectsOutputDir);
@@ -10,7 +8,7 @@ Future<Map<String, Set<String>>?> computeDependencyTree(
   }
   final result = <String, Set<String>>{};
   await for (final file in outDir.list()) {
-    if (file is File && paths.extension(file.path) == '.d') {
+    if (file is File && file.path.endsWith('.d')) {
       final (outFile, deps) =
           _parseMakeFileDependencies(await file.readAsString());
 
@@ -32,12 +30,7 @@ Future<Map<String, Set<String>>?> computeDependencyTree(
   final startIndex = line.indexOf(':');
   if (startIndex > 0 && startIndex < line.length - 1) {
     final output = line.substring(0, startIndex);
-    final deps = line
-        .substring(startIndex + 1)
-        .trim()
-        .split(' ')
-        // the .h files are listed, so change the extension to .c
-        .map((e) => paths.setExtension(e, '.c'));
+    final deps = line.substring(startIndex + 1).trim().split(' ');
     return (output, deps);
   }
   throw StateError('Cannot parse Makefile dependency: "$line"');

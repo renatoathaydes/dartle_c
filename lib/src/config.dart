@@ -15,6 +15,11 @@ final class SourceFiles implements Sources {
 
   @override
   FileCollection toFileCollection() => files(sourceFiles);
+
+  @override
+  String toString() {
+    return 'SourceFiles($sourceFiles)';
+  }
 }
 
 final class SourceDirectories implements Sources {
@@ -25,6 +30,11 @@ final class SourceDirectories implements Sources {
   @override
   FileCollection toFileCollection() =>
       dirs(directories, fileExtensions: const {'.c', '.h'});
+
+  @override
+  String toString() {
+    return 'SourceDirectories(${toFileCollection()})';
+  }
 }
 
 typedef DartleCConfig = ({
