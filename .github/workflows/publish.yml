@@ -17,6 +17,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
       - name: Build
-        run: dart dartle.dart analyze # testing would require setting the C compiler
+        run: dart dartle.dart analyze --disable-cache # testing would require setting the C compiler
       - name: Publish
         run: dart pub publish --force

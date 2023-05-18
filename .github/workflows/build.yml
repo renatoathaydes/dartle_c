@@ -28,7 +28,7 @@ jobs:
         run: clang --version
       - name: Build
         shell: bash
-        run: dart dartle.dart
+        run: dart dartle.dart --disable-cache
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
