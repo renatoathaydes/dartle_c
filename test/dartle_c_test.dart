@@ -63,8 +63,9 @@ void main() {
       final helloOutTime2 = await helloO.lastModified();
       final greetingOutTime2 = await greetingO.lastModified();
 
-      // both object files must be recompiled
-      expect(helloOutTime2, isAfter(helloOutTime));
+      // only the greeting.c file is recompiled because
+      // hello.c depends on the .h file, not the .c file
+      expect(helloOutTime2, equals(helloOutTime));
       expect(greetingOutTime2, isAfter(greetingOutTime));
 
       // compile again after changing only greeting.h
@@ -78,9 +79,9 @@ void main() {
       final helloOutTime3 = await helloO.lastModified();
       final greetingOutTime3 = await greetingO.lastModified();
 
-      // both object files must be recompiled
+      // only hello.c is recompiled
       expect(helloOutTime3, isAfter(helloOutTime2));
-      expect(greetingOutTime3, isAfter(greetingOutTime2));
+      expect(greetingOutTime3, equals(greetingOutTime2));
 
       // compile again after changing only hello.c
       await Future.delayed(Duration(seconds: 1));
@@ -97,7 +98,7 @@ void main() {
       expect(helloOutTime4, isAfter(helloOutTime3));
       expect(greetingOutTime4, equals(greetingOutTime3));
 
-      // deleting only the hello.o file should cause only it to be recompiled
+      // deleting any output causes a full recompilation
       await Future.delayed(Duration(seconds: 1));
       await helloO.delete();
       await ex.runBuild(const Options(),
@@ -109,7 +110,7 @@ void main() {
       final greetingOutTime5 = await greetingO.lastModified();
 
       expect(helloOutTime5, isAfter(helloOutTime4));
-      expect(greetingOutTime5, equals(greetingOutTime4));
+      expect(greetingOutTime5, isAfter(greetingOutTime4));
 
       // finally, running it without modifying anything doesn't do anything
       await Future.delayed(Duration(seconds: 1));
