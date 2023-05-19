@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:dartle/dartle.dart';
-import 'package:path/path.dart' as paths;
+
+import 'logger.dart';
 
 class Linker {
   final String binaryOutputFile;
@@ -20,16 +21,21 @@ class Linker {
   Future<int> link(List<String> args) async {
     final objectFiles = await inputs
         .resolveFiles()
-        .where((f) => paths.extension(f.path) == '.o')
+        .where((f) => f.path.endsWith('.o'))
         .toList();
+
+    final allArgs = [
+      ...args,
+      ...linkerArgs,
+      '-o',
+      binaryOutputFile,
+      ...objectFiles.map((f) => f.path),
+    ];
+
+    logger.fine(() => 'Compiler command: $compiler ${allArgs.join(' ')}');
+
     return await execProc(
-      Process.start(compiler, [
-        ...args,
-        ...linkerArgs,
-        '-o',
-        binaryOutputFile,
-        ...objectFiles.map((f) => f.path),
-      ]),
+      Process.start(compiler, allArgs),
       successMode: StreamRedirectMode.stdoutAndStderr,
     );
   }

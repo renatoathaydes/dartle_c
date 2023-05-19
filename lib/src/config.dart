@@ -62,6 +62,7 @@ extension DartleCConfigFunctions on DartleCConfig {
       objectsOutputDir: objectsOutputDir,
       compiler: compiler,
       compilerArgs: compilerArgs,
+      linkerArgs: linkerArgs,
     );
   }
 }
