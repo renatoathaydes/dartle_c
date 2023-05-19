@@ -66,7 +66,7 @@ below (all properties are optional):
 
 ```yaml
 compiler: gcc
-compiler-args: ["-std=c2x", "-Wall", "-Werror", "-ansi", "-pedantic"]
+compiler-args: ["-std=c2x", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic"]
 linker-args: ["-shared"]
 objects-dir: out
 source-dirs: [src]
