@@ -18,7 +18,7 @@ class CCompiler {
 
   CCompiler(this.sourceFiles, this.cache, this.objectsOutputDir,
       [String? compiler, this.compilerArgs = const []]) {
-    this.compiler = compiler ?? _selectCompiler();
+    this.compiler = _selectCompiler(compiler);
 
     // FIXME parse .d files to figure out actual dependencies?
     outputs = CachedFileCollection(
@@ -32,7 +32,7 @@ class CCompiler {
 
   ArgsValidator get argsValidator => const AcceptAnyArgs();
 
-  Future<int> compile(List<String> args, [ChangeSet? changeSet]) async {
+  Future<void> compile(List<String> args, [ChangeSet? changeSet]) async {
     final originalSources =
         await sourceFiles.resolveFiles().asyncMap((f) => f.path).toSet();
     logger.fine(() => 'Original source files: $originalSources');
@@ -61,18 +61,29 @@ class CCompiler {
 
     await Directory(objectsOutputDir).create(recursive: true);
 
-    final allArgs = [...compilerArgs, ...args, '-MMD', '-c', ...sources];
+    final (compile, preArgs) = splitCompilerCmd(compiler);
 
-    logger.fine(() => 'Compiler command: $compiler ${allArgs.join(' ')}');
+    final allArgs = [
+      ...preArgs,
+      ...compilerArgs,
+      ...args,
+      '-MMD',
+      '-c',
+      ...sources,
+    ];
+
+    logger.fine(() => 'Compiler command: $compile ${allArgs.join(' ')}');
 
     try {
-      return await execProc(
-        Process.start(compiler, allArgs,
+      await execProc(
+        Process.start(compile, allArgs,
             workingDirectory: Directory.current.path),
         successMode: StreamRedirectMode.stdoutAndStderr,
       );
-    } finally {
       await _moveObjectsTo(objectsOutputDir, sources);
+    } catch (e) {
+      await _deleteObjects(sources);
+      rethrow;
     }
   }
 
@@ -117,6 +128,17 @@ Future<void> _moveObjectsTo(
   }
 }
 
+Future<void> _deleteObjects(Iterable<String> sources) async {
+  final cSources = sources.where((e) => e.endsWith('.c')).toSet();
+  logger.fine(() => 'Cleaning up ${2 * cSources.length} file(s)');
+  for (final source in cSources) {
+    final obj = File(paths.setExtension(paths.basename(source), '.o'));
+    final dFile = File(paths.setExtension(paths.basename(source), '.d'));
+    await ignoreExceptions(obj.delete);
+    await ignoreExceptions(dFile.delete);
+  }
+}
+
 Iterable<String> _dependents(
     String path, Map<String, Set<String>> dependencyTree) {
   return dependencyTree.entries
@@ -124,12 +146,33 @@ Iterable<String> _dependents(
       .map((e) => e.key);
 }
 
-String _selectCompiler() {
+String _selectCompiler(String? configCompiler) {
+  if (configCompiler != null) {
+    return _validateCompiler(configCompiler, source: 'config file');
+  }
   final cc = Platform.environment['CC'];
-  if (cc != null) return cc;
+  if (cc != null) return _validateCompiler(cc, source: 'CC env-var');
   if (Platform.isWindows || Platform.isMacOS) return 'clang';
   if (Platform.isLinux) return 'gcc';
   throw StateError('Cannot select C compiler for this Platform. '
       'Please set the CC environment variable or provide a `compiler` '
       'explicitly when creating DartleC.');
+}
+
+String _validateCompiler(String compiler, {required String source}) {
+  final trimmed = compiler.trim();
+  if (trimmed.isEmpty) {
+    throw DartleException(
+        message: 'C Compiler resolved from $source into an empty string');
+  }
+  return trimmed;
+}
+
+(String, List<String>) splitCompilerCmd(String compiler) {
+  if (compiler.contains(' ')) {
+    final ([compile, ...args]) =
+        compiler.split(' ').map((s) => s.trim()).toList();
+    return (compile, args);
+  }
+  return (compiler, const []);
 }
