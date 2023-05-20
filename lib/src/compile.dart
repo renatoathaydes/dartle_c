@@ -19,6 +19,8 @@ class CCompiler {
   CCompiler(this.sourceFiles, this.cache, this.objectsOutputDir,
       [String? compiler, this.compilerArgs = const []]) {
     this.compiler = compiler ?? _selectCompiler();
+
+    // FIXME parse .d files to figure out actual dependencies?
     outputs = CachedFileCollection(
         dir(objectsOutputDir, fileExtensions: const {'.o', '.d'}));
 

@@ -1,0 +1,5 @@
+source-dirs: [ lib ]
+compiler-args: [ "-std=c99", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic",
+                 "-Werror-implicit-function-declaration", "-Wmissing-prototypes" ]
+linker-args: [ "-shared" ]
+output: out/libmylib.so
