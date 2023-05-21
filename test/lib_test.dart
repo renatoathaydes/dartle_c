@@ -13,8 +13,9 @@ const libUserOutDir = '$libUserDir/out';
 const libUserMain = '$libUserOutDir/main';
 
 Future<int> _runBuild(List<String> args, String workingDir) {
-  return execProc(
-      Process.start('dart', [dcc, ...args], workingDirectory: workingDir));
+  return execProc(Process.start(
+      'dart', [dcc, '--no-color', '-l', 'debug', ...args],
+      workingDirectory: workingDir));
 }
 
 String _ldLibEnvVarName() {
