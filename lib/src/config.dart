@@ -4,6 +4,8 @@ import 'package:dartle/dartle.dart';
 import 'package:dartle_c/dartle_c.dart';
 import 'package:yaml/yaml.dart';
 
+final String objectFileExtension = Platform.isWindows ? '.obj' : '.o';
+
 /// The location of the sources to compile.
 sealed class Sources {
   FileCollection toFileCollection();

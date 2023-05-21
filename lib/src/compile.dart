@@ -4,6 +4,7 @@ import 'package:dartle/dartle.dart';
 import 'package:dartle/dartle_cache.dart';
 import 'package:path/path.dart' as paths;
 
+import 'config.dart';
 import 'dependencies.dart';
 import 'file_collection.dart';
 import 'logger.dart';
@@ -22,7 +23,7 @@ class CCompiler {
 
     // FIXME parse .d files to figure out actual dependencies?
     outputs = CachedFileCollection(
-        dir(objectsOutputDir, fileExtensions: const {'.o', '.d'}));
+        dir(objectsOutputDir, fileExtensions: {objectFileExtension, '.d'}));
 
     logger.fine(() => 'Selected C Compiler: ${this.compiler}');
   }
@@ -105,9 +106,9 @@ class CCompiler {
           break;
         case ChangeKind.deleted:
           // must delete the output file from all deleted sources
-          await ignoreExceptions(() async =>
-              await File(paths.setExtension(change.entity.path, '.o'))
-                  .delete());
+          await ignoreExceptions(() async => await File(
+                  paths.setExtension(change.entity.path, objectFileExtension))
+              .delete());
       }
     }
   }
@@ -119,7 +120,8 @@ Future<void> _moveObjectsTo(
   logger
       .fine(() => 'Moving ${2 * cSources.length} file(s) to $objectsOutputDir');
   for (final source in cSources) {
-    final obj = File(paths.setExtension(paths.basename(source), '.o'));
+    final obj =
+        File(paths.setExtension(paths.basename(source), objectFileExtension));
     final dFile = File(paths.setExtension(paths.basename(source), '.d'));
     logger.finer(
         () => 'Moving ${obj.path} and ${dFile.path} to $objectsOutputDir');
@@ -132,7 +134,8 @@ Future<void> _deleteObjects(Iterable<String> sources) async {
   final cSources = sources.where((e) => e.endsWith('.c')).toSet();
   logger.fine(() => 'Cleaning up ${2 * cSources.length} file(s)');
   for (final source in cSources) {
-    final obj = File(paths.setExtension(paths.basename(source), '.o'));
+    final obj =
+        File(paths.setExtension(paths.basename(source), objectFileExtension));
     final dFile = File(paths.setExtension(paths.basename(source), '.d'));
     await ignoreExceptions(obj.delete);
     await ignoreExceptions(dFile.delete);

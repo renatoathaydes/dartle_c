@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dartle/dartle.dart';
+import 'package:dartle_c/dartle_c.dart';
 
 import 'logger.dart';
 
@@ -21,7 +22,7 @@ class Linker {
   Future<int> link(List<String> args) async {
     final objectFiles = await inputs
         .resolveFiles()
-        .where((f) => f.path.endsWith('.o'))
+        .where((f) => f.path.endsWith(objectFileExtension))
         .toList();
 
     final allArgs = [

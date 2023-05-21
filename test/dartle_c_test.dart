@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dartle/dartle.dart';
+import 'package:dartle_c/dartle_c.dart';
 import 'package:logging/logging.dart' show Level;
 import 'package:path/path.dart' as paths;
 import 'package:test/test.dart';
@@ -13,8 +14,10 @@ final objectsOutputDir = paths.join('test', 'out');
 
 void main() {
   group('DartleC', () {
-    final helloO = File(paths.join(objectsOutputDir, 'hello.o'));
-    final greetingO = File(paths.join(objectsOutputDir, 'greeting.o'));
+    final helloO =
+        File(paths.join(objectsOutputDir, 'hello$objectFileExtension'));
+    final greetingO =
+        File(paths.join(objectsOutputDir, 'greeting$objectFileExtension'));
     final helloc = File(paths.join(sourceDir, 'hello.c'));
     final greetingc = File(paths.join(sourceDir, 'greeting.c'));
     final greetingh = File(paths.join(sourceDir, 'greeting.h'));
@@ -44,7 +47,12 @@ void main() {
               .list(recursive: true)
               .map((f) => paths.basename(f.path))
               .toSet(),
-          equals({'greeting.d', 'greeting.o', 'hello.d', 'hello.o'}));
+          equals({
+            'greeting.d',
+            'greeting$objectFileExtension',
+            'hello.d',
+            'hello$objectFileExtension'
+          }));
       expect(await File(binaryOutputFile).exists(), isTrue);
 
       // test incremental compilation
