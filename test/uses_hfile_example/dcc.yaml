@@ -1,5 +1,5 @@
 compiler-args: [ "-std=c99", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic",
                  "-Werror-implicit-function-declaration", "-Wmissing-prototypes",
                  "-I../single_hfile_example/lib" ]
-linker-args: [ "-L", "../single_hfile_example/out", "-l", "mylib" ]
+linker-args: [ "-L../single_hfile_example/out", "-lmylib" ]
 output: out/main
