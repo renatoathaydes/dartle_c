@@ -48,6 +48,9 @@ final class SourceDirectories implements Sources {
 typedef DartleCConfig = ({
   String? compiler,
   List<String> compilerArgs,
+  String? archiver,
+  List<String> archiverArgs,
+  String? archiveFile,
   List<String> linkerArgs,
   String objectsOutputDir,
   Sources sources,
@@ -62,6 +65,7 @@ extension DartleCConfigFunctions on DartleCConfig {
       sources.toFileCollection(),
       binaryOutputFile,
       objectsOutputDir: objectsOutputDir,
+      archiveFile: archiveFile,
       compiler: compiler,
       compilerArgs: compilerArgs,
       linkerArgs: linkerArgs,
@@ -89,6 +93,9 @@ DartleCConfig _loadConfig(dynamic doc) {
   return (
     compiler: _stringOrError(doc, 'compiler'),
     compilerArgs: _stringsOrError(doc, 'compiler-args'),
+    archiveFile: _stringOrError(doc, 'archive'),
+    archiver: _stringOrError(doc, 'archiver'),
+    archiverArgs: _stringsOrError(doc, 'archiver-args'),
     linkerArgs: _stringsOrError(doc, 'linker-args'),
     objectsOutputDir: _stringOrError(doc, 'objects-dir', defaultValue: 'out')!,
     sources: _sources(doc, 'source-files', 'source-dirs'),

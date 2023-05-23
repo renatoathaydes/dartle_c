@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dartle/dartle.dart';
 import 'package:dartle/dartle_cache.dart';
+import 'package:dartle_c/src/archive.dart';
 
 import 'compile.dart';
 import 'file_collection.dart';
@@ -27,6 +28,18 @@ class DartleC {
   /// The `compileC` task also accepts compiler arguments.
   final List<String> compilerArgs;
 
+  /// The file to store the compiled object files.
+  final String? archiveFile;
+
+  /// The object files archiver to use.
+  /// If null, the `AR` environment variable is used, and if that is not set,
+  /// an appropriate archiver is chosen for the platform.
+  final String? archiver;
+
+  /// Extra archiver arguments.
+  /// The `archiveObjects` task also accepts archiver arguments.
+  final List<String> archiverArgs;
+
   /// Extra linker arguments.
   /// The `linkC` task also accepts linker arguments.
   final List<String> linkerArgs;
@@ -36,6 +49,9 @@ class DartleC {
 
   /// The compileC task.
   late final Task compileC;
+
+  /// The archiveObjects task.
+  late final Task archiveObjects;
 
   /// The linkC task.
   late final Task linkC;
@@ -47,6 +63,9 @@ class DartleC {
       {this.objectsOutputDir,
       this.compiler,
       this.compilerArgs = const [],
+      this.archiveFile,
+      this.archiver,
+      this.archiverArgs = const [],
       this.linkerArgs = const [],
       DartleCache? cache})
       : cache = cache ?? DartleCache.instance {
@@ -56,12 +75,16 @@ class DartleC {
     final cc = CCompiler(
         cachedSourceFiles, this.cache, objDir, compiler, compilerArgs);
 
+    final ar =
+        Archiver(this.cache, cc.outputs, archiveFile, archiver, archiverArgs);
+
     final linker =
         Linker(cc.outputs, binaryOutputFile, cc.compiler, linkerArgs);
 
     compileC = _createCompileTask(cc);
+    archiveObjects = _createArchiverTask(ar);
     linkC = _createLinkTask(linker);
-    tasks = {compileC, linkC};
+    tasks = {compileC, linkC, archiveObjects};
   }
 
   Task _createCompileTask(CCompiler compiler) {
@@ -70,6 +93,15 @@ class DartleC {
         description: 'Compiles C source code into object files.',
         runCondition: compiler.runCondition,
         argsValidator: compiler.argsValidator);
+  }
+
+  Task _createArchiverTask(Archiver archiver) {
+    return Task(archiver.archive,
+        name: 'archiveObjects',
+        description: 'Archives object files into static library.',
+        dependsOn: {compileC.name},
+        runCondition: archiver.runCondition,
+        argsValidator: archiver.argsValidator);
   }
 
   Task _createLinkTask(Linker linker) {

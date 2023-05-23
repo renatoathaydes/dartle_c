@@ -3,3 +3,4 @@ compiler-args: [ "-std=c99", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic"
                  "-Werror-implicit-function-declaration", "-Wmissing-prototypes" ]
 linker-args: [ "-shared", "-fPIC" ]
 output: out/libmylib.so
+archive: out/libmylib.a

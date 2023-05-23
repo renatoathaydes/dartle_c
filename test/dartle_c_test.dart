@@ -11,6 +11,7 @@ import '../example/dartle_c_example.dart' as ex;
 final sourceDir = paths.join('test', 'src');
 final binaryOutputFile = paths.join('test', 'a.out');
 final objectsOutputDir = paths.join('test', 'out');
+const archiveFile = 'libdartle_c.a';
 
 void main() {
   group('DartleC', () {
@@ -132,6 +133,14 @@ void main() {
 
       expect(helloOutTime6, equals(helloOutTime5));
       expect(greetingOutTime6, equals(greetingOutTime5));
+
+      // create an archive
+      await ex.runBuild(const Options(tasksInvocation: ['archive']),
+          sourceDir: sourceDir,
+          binaryOutputFile: binaryOutputFile,
+          objectsOutputDir: objectsOutputDir);
+
+      expect(await File(archiveFile).exists(), isTrue);
     }, timeout: const Timeout(Duration(minutes: 1)));
   });
 }
@@ -142,6 +151,7 @@ Future<void> _cleanup() async {
   await ignoreExceptions(() =>
       Directory(paths.join('test', '.dartle_tool')).delete(recursive: true));
   await ignoreExceptions(() => File(binaryOutputFile).delete());
+  await ignoreExceptions(() => File(archiveFile).delete());
 }
 
 Matcher isAfter(DateTime other) => GreaterThanDateTimeMatcher(other);
