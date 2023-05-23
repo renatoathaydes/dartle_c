@@ -3,6 +3,7 @@
 - fixed configuration loading.
 - fixed linker ignoring arguments.
 - allow CC to include compiler arguments.
+- added `archiveObjects` task.
 
 ## 0.3.0
 
