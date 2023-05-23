@@ -27,13 +27,14 @@ generating a binary executable named `a.out`.
 
 * `compileC` - Compiles C source code into object files.
 * `linkC` - Links object files, creating a binary executable.
+* `archiveObjects` - Archives object files, creating a static library.
 * `cleanC` - Deletes the outputs of all other tasks.
 
-`linkC` depends on `compileC` and is the default task. Hence, simply running `dcc`
-will run both tasks as necessary.
+Both `linkC` and `archiveObjects` depend on `compileC`, with `linkC` being the default task.
+Hence, running `dcc` without arguments will invoke the `compileC` and `linkC` tasks, as necessary.
 
 To only compile the C source files without generating an executable,
-and using a specific `cstd` version:
+and using a specific `cstd` version, as an example:
 
 ```shell
 dcc compileC :-cstd=c99
@@ -45,6 +46,8 @@ dcc compileC :-cstd=c99
 Notice that Dartle allows calling tasks by typing only their partial names, so for example,
 the `compileC` task can be run by typing `dcc comp` or `dcc coC`. To run `linkC`, if no
 extra tasks are added, requires only `dcc l` (as no other tasks start with an `l`).
+
+To run the archive task, it's enough to invoke `dcc ar`.
 
 Useful options:
 
@@ -66,21 +69,26 @@ below (all properties are optional):
 
 ```yaml
 compiler: gcc
-compiler-args: ["-std=c2x", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic"]
-linker-args: ["-shared"]
+compiler-args: [ "-std=c2x", "-Wall", "-Wextra", "-Werror", "-ansi", "-pedantic" ]
+linker-args: [ "-shared" ]
 objects-dir: out
-source-dirs: [src]
+source-dirs: [ src ]
 
 # instead of source-dirs, you can also list files explicitly:
 # source-files: [foo.c, bar.c]
 
 output: my-binary
+
+archiver: ar
+archiver-args: [ "-v" ]
+archive: out/libmylib.a
 ```
 
 > The `compiler` is chosen depending on the platform if not provided.
 > You can also set the `CC` environment variable to choose one.
+> Similarly, the archiver can be set with the `AR` environment variable.
 
-Task options are added to the `compiler-args` provided in the YAML configuration file.
+Task arguments are added to the respective `*-args` provided in the YAML configuration file.
 
 ## Using `DartleC` as a library.
 
