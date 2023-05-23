@@ -7,6 +7,7 @@ import 'package:path/path.dart' as paths;
 import 'config.dart';
 import 'dependencies.dart';
 import 'file_collection.dart';
+import 'helpers.dart';
 import 'logger.dart';
 
 class CCompiler {
@@ -62,7 +63,7 @@ class CCompiler {
 
     await Directory(objectsOutputDir).create(recursive: true);
 
-    final (compile, preArgs) = splitCompilerCmd(compiler);
+    final (compile, preArgs) = splitCommand(compiler);
 
     final allArgs = [
       ...preArgs,
@@ -169,13 +170,4 @@ String _validateCompiler(String compiler, {required String source}) {
         message: 'C Compiler resolved from $source into an empty string');
   }
   return trimmed;
-}
-
-(String, List<String>) splitCompilerCmd(String compiler) {
-  if (compiler.contains(' ')) {
-    final ([compile, ...args]) =
-        compiler.split(' ').map((s) => s.trim()).toList();
-    return (compile, args);
-  }
-  return (compiler, const []);
 }
